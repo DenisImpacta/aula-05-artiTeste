@@ -1,79 +1,63 @@
-name: Go Artefato Hello-Server
-   
+
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Go Hello-Server
+
 env:
   FILE_NAME: hello-server
-  
+
 on:
   push:
     branches: [ "main" ]
+    workflow_dispatch:
+      schedule:
+        - cron: ‘*/15 * * * 1-6’
 
-  workflow_dispatch:
-  schedule:
-    - cron: "*/15 * * * 1-6"  # Executa 15 a 15 minutos de segunda a sábado
-  
 jobs:
   build-go:
-    name: Build GO
     runs-on: ubuntu-latest
-    
     steps:
-    - name: Checkout GO Code
-      uses: actions/checkout@v4
-      
+    - uses: actions/checkout@v4
+
     - name: Set up Go
-      uses: actions/setup-go@v5.0.2  
-      
-    - name: Build ${{env.FILE_NAME}} for ubuntu-latest
+      uses: actions/setup-go@v5.0.2
+
+    - name: Build
       run: go build ${{env.FILE_NAME}}.go
-      
-    - name: Build ${{env.FILE_NAME}} for windows-latest
+
+    - name: Build Windows
       run: GOOS=windows GOARCH=amd64 go build ${{env.FILE_NAME}}.go
-    
-  upload-job-linux:
-    name: Upload Job Linux
-    runs-on: ubuntu-latest
-    
-    steps:
+
     - name: Upload artifact for linux
-      uses: actions/upload-artifact@v4.4.0
+      uses: actions/upload-artifact@v1.0.0
       with:
         name: linux
         path: ./${{ env.FILE_NAME }}
 
-  upload-job-windows:
-    runs-on: windows-latest
-    
-    steps:
-      - name: Upload artefato no windows
-        uses: actions/upload-artifact@v4.4.0
-        with:
-          name: windows
-          path: ./${{env.FILE_NAME}}.exe
+    - name: Upload artifact for windows
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        name: windows
+        path: ./${{ env.FILE_NAME }}.exe
 
   download-and-run-linux:
     name: Download and run Linux
     runs-on: ubuntu-latest
     needs: build-go
-    
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-      - name: Download Linux Artifact
-        uses: actions/download-artifact@v4.1.8
-        with:
-          name: linux
-      - name: Run Script
-        run: source ./run.sh
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4.1.8
+        name: linux
+      - name: Run script
+        run: |
+          source ./run.sh
 
   download-only-windows:
     name: Download Windows
     runs-on: windows-latest
     needs: build-go
-    
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-      - name: Download Windows Artifact
-        uses: actions/download-artifact@v4.1.8
-        with:
-          name: windows
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4.1.8
+        name: windows
